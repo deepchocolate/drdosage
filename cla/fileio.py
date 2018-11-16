@@ -1,9 +1,9 @@
 import csv
 class FileIO(csv.DictReader):
-    def __init__(self, inFile, outFile):
-        self._inFile = inFile
-        self._outFile = outFile
-        self._inputResource = False
+    def __init__(self, inStream, outStream=False):
+        self._inFile = inStream
+        self._outFile = outStream
+        self._inputResource = inStream
         self._inputStream = False
         self._inputHeader = False
         self._outputHeader = False
@@ -32,8 +32,8 @@ class FileIO(csv.DictReader):
         Load data from input resource.
         """
         #self._inputResource = open(inFile,newline='')
-        try: self._inputResource = open(self._inFile,newline='')
-        except IOError: print('File "'+inFile+'" could not be opened!')
+        #try: self._inputResource = open(self._inFile,newline='')
+        #except IOError: print('File "'+inFile+'" could not be opened!')
         #print(resource)
         #self._nrRecords = self._inputResource.read().count("\n")-1
         self.seek()
@@ -56,7 +56,8 @@ class FileIO(csv.DictReader):
         """
         Load final output.
         """
-        self._outputStream = csv.DictWriter(open(self._outFile, 'w'), self._outputHeader)
+        #self._outputStream = csv.DictWriter(open(self._outFile, 'w'), self._outputHeader)
+        self._outputStream = csv.DictWriter(self._outFile, self._outputHeader)
         self._outputStream.writeheader()
         return self
         
@@ -65,6 +66,7 @@ class FileIO(csv.DictReader):
         else: return True
 
     def seek(self, bytePos=0):
+        #print(self._inputResource)
         self._inputResource.seek(bytePos)
         return self
 
