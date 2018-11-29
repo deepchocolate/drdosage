@@ -60,7 +60,7 @@ class Translator:
             self._ioData.rewind()
             self.goToNextMissing()
             incorrect = 0
-            self.classifier.setNrHiddenNeurons(neurons).updateNetwork()
+            self.classifier.setNrHiddenNeurons(neurons).updateNetwork3()
             i = 0
             while next(self._ioData) != False and i < 10000:
                 if self._ioData.position() % 5000 == 0: print('Parsing record:',self._ioData.position() + 1)
@@ -154,7 +154,7 @@ class Translator:
         print('Parsed ',included,' records. Proceeding to optimize...')
         optNeurons, accuracy = self.optimize()
         print(round(100*accuracy,2),'% accuracy reached with',optNeurons,' neurons')
-        self.classifier.setNrHiddenNeurons(optNeurons).updateNetwork()
+        self.classifier.setNrHiddenNeurons(optNeurons).updateNetwork3()
         return self
     
     def transcribeCurrent(self):
@@ -190,13 +190,13 @@ class Translator:
             #except BaseException as e:
             #    val = False
             #    error = 1
-            #total = ''
-            #objects = ''
+            total = ''
+            objects = ''
             val, pattern, error, p = self.transcribeCurrent()
-            if val != False and p > 0.5:
+            if val != False:
                 total = sum(val.totals())
                 objects = val.objects()
-                self._errors[self._ioData.position()] = False
+                self._errors[self._ioData.position()-1] = False
             else: error = 1
             self._ioData.setCol('total', total).setCol('manual', 0).setCol('pattern', pattern).setCol('error', error).setCol('prob', p).setCol('object', objects)
             self._ioData.setOutput()
@@ -236,8 +236,8 @@ class Translator:
         print('Done')
         self._ioData.writeOutput()
 
-def menu(self):
-	inp = '1'
+def menu():
+    inp = '1'
     minPatterns = Translator.minPatterns
     maxExamples = Translator.maxExamples
     minExamples = Translator.minExamples
@@ -276,7 +276,11 @@ if __name__ == '__main__':
         args = ap.parse_args()
         pass
     else:
-        menu()
+        #t = Translator(open('../csv/meds_50000.csv'),open('meds_50000_output.csv','w'),'doser')
+        t = Translator(open('../csv/meds_100.csv'),open('meds_100_output.csv','w'),'doser')
+        #print(t.trainFromFile('../csv/meds_100_train.csv','doser','pattern').saveModel().save('meds_200.model'))
+        t.load('meds_200.model').runModels()
+        #menu()
         
     #print('hej')
 #else:
