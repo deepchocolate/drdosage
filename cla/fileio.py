@@ -11,7 +11,7 @@ class FileIO(csv.DictReader):
         self._currentInput = False
         self._currentOutput = False
         self._nrRecords = False
-        self._errors = []
+        #self._errors = []
         self._output = False
         self._position = -1
         self.loadInput()
