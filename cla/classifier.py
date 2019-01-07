@@ -33,13 +33,29 @@ def calculateError(y, x, wx, wy):
 
 def calculateErrorOptim (x, out, inp, neurons):
 	xlen = len(inp[0])
-	#print(len(x))
-	#print(x[:xlen*neurons])
-	#print(x[xlen*neurons:])
 	wx = np.array(x[:xlen*neurons]).reshape(xlen,neurons)
 	wy = np.array(x[xlen*neurons:]).reshape(neurons,len(out[0]))
 	#ypred = logit(np.dot(logit(np.dot(inp,wx)),wy))
 	return calculateError(out, inp, wx, wy)
+
+def matsToList(a, b):
+	"""
+	Convert to numpy matrices to list.
+	"""
+	return a.flatten().tolist() + b.flatten().tolist()
+
+def calculateGradient(x, out, inp, neurons):
+	xlen = len(inp[0])
+	wx = np.array(x[:xlen*neurons]).reshape(xlen,neurons)
+	wy = np.array(x[xlen*neurons:]).reshape(neurons,len(out[0]))
+	# Output error: d(Y-Y(Wy*g(x)))^2/dWy = 2*(Y-Y(Wy*g(x)))*Y'(Wy*g(x))*g(x)
+	L1 = logistic(np.dot(inp, wx))
+	L2 = logistic(np.dot(L1, wy))
+	error = out - L2
+	dL2 = np.dot(L1.T,-2*error*dLogistic(L2))
+	# Input error: d(Y-Y(Wy*g(x)))^2/dWx = 2*(Y-Y(Wy*g(x)))*Y'(Wy*g(x))*Wy*g'(x)*x
+	dL1 = np.dot(inp.T, np.dot(-2*error*dLogistic(L2),wy.T) * dLogistic(L1))
+	return np.append(np.asarray(dL1.flatten()), np.asarray(dL2.flatten()))
 
 class Classifier:
 	def __init__(self):
@@ -186,14 +202,16 @@ class Classifier:
 		wy = np.array(l[lenx*self.hiddenNeurons:]).reshape(self.hiddenNeurons, leny)
 		return wx, wy
 	
-	def fit(self, verbose=False):
+	def fit(self, useGradient=False, verbose=False):
 		if verbose: print('Starting model fitting using', self.hiddenNeurons,'neurons in hidden layer.')
 		#print(len(self.y[0]))
 		p1, p2 = self.createLayers()
 		params = self.matsToList(p1, p2)
 		self.x = np.array(self.x)
 		self.y = np.array(self.y)
-		minParams = minimize(fun=calculateErrorOptim, x0=params, args=(self.y, self.x, self.hiddenNeurons), method='L-BFGS-B',options={'maxfun':50000})
+		gradient = None
+		if useGradient: gradient = calculateGradient
+		minParams = minimize(fun=calculateErrorOptim, x0=params, args=(self.y, self.x, self.hiddenNeurons), jac=gradient, method='L-BFGS-B',options={'maxfun':50000})
 		if verbose: print('Convergence=%s after %s iterations.' % (str(minParams.success), str(minParams.nit)))
 		self.synapse = [0]*2
 		self.synapse[0],self.synapse[1] = self.listToMats(minParams.x)
