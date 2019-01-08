@@ -119,7 +119,7 @@ if __name__ == '__main__':
 		nL, nU = args.n if len(args.n)==2 else [args.n[0], args.n[0]]
 		t = Trainer(False, args.tc[0], args.t, args.ttc)
 		for train in args.training:
-			t.setInput(train, args.tc[0]).parsePatterns(args.pc[0]).train(args.tc[0], nL, nU)
+			t.setInput(train, args.tc[0]).parsePatterns(args.pc[0]).train(args.tc[0], int(nL), int(nU))
 			t.saveModel()
 		t.save(args.o)
 	else:
