@@ -41,7 +41,7 @@ class Trainer(Mum):
 		while next(self) != False:
 			txt = self.get(self._textColumn)
 			txtSimple = simplify(replaceNumbers(txt))
-			pattern = self.get(patternColumn).lower()
+			pattern = self.get(patternColumn).lower().strip()
 			if pattern not in ['-', '']:
 				try:
 					transcript = self.parseInstruction(txt, pattern)
@@ -75,7 +75,14 @@ class Trainer(Mum):
 			while next(self) != False:
 				if i % 5000 == 0: print('Parsing record:',i + 1)
 				value, pattern, error, prob = self.transcribeCurrent()
-				if value == False: incorrect += 1
+				# Get pattern stripped of whitespace
+				outputPattern = ''
+				txt = self.get(patternColumn).strip().lower()
+				if len(txt) > 0:
+					txt = txt.split(' ')
+					for ch in txt: outputPattern += ch
+				if pattern != outputPattern: incorrect += 1
+				#if value == False: incorrect += 1
 				i += 1
 			accuracy = 1
 			if incorrect <= i: accuracy = 1 - incorrect/i
@@ -119,8 +126,12 @@ if __name__ == '__main__':
 		nL, nU = args.n if len(args.n)==2 else [args.n[0], args.n[0]]
 		t = Trainer(False, args.tc[0], args.t, args.ttc)
 		for train in args.training:
-			t.setInput(train, args.tc[0]).parsePatterns(args.pc[0]).train(args.tc[0], int(nL), int(nU))
+			optimal, accuracy = t.setInput(train, args.tc[0]).parsePatterns(args.pc[0]).train(args.tc[0], int(nL), int(nU))
+			print('Maximum accuracy reached with '+str(optimal)+' neurons: '+str(accuracy)+'% predicted correctly.')
 			t.saveModel()
 		t.save(args.o)
 	else:
 		pass
+# Add working example of below
+#t = Trainer(False, 'dosetext').setInput(open('textfile.csv','inputtext').parsePatterns('pattern').saveModel().save(open('myModel.model','w'))
+# Fix bug: leading/trailing blanks in patterns
