@@ -26,7 +26,6 @@ def menu():
 			self.save('synapses.json')
 
 if __name__ == '__main__':
-	#print('hej')
 	ap = argparse.ArgumentParser(description="""Dr. Dose is a neural network based prediction engine tailored to 
 	extract dosage information from pharmaceutial prescription texts in the Swedish Prescribed Drug Register.
 	
