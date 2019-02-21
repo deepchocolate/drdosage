@@ -4,8 +4,8 @@ from fun import simplify
 import argparse, sys
 class Filter(FileIO):
     """
-		It is recommended to put the filtered output in a new column, i.e. append it
-		to a new column as the filtering may remove important semantics in the text.    
+        It is recommended to put the filtered output in a new column, i.e. append it
+        to a new column as the filtering may remove important semantics in the text.    
     """
     def __init__(self, inputStream, outputStream, inputColumn, outputColumn=False):
         # If not outputColumn, replace the data in this column.
@@ -16,23 +16,23 @@ class Filter(FileIO):
             self.setOutput()
         self.writeOutput()
    
-	def removeExtraWhitespace(self):
-		"""
-		Collapse repeated whitespace into a single space ' '.
-		"""
-		pass
+    def removeExtraWhitespace(self):
+        """
+        Collapse repeated whitespace into a single space ' '.
+        """
+        pass
 
-	def polishWords(self):
-		"""
-		Remove leading/trailing characters in words such as periods, question marks etc.
-		"""
-		pass
-	
-	def filter(self):
-		"""
-		Apply the selected filters to the input data.
-		"""
-		pass
+    def polishWords(self):
+        """
+        Remove leading/trailing characters in words such as periods, question marks etc.
+        """
+        pass
+    
+    def filter(self):
+        """
+        Apply the selected filters to the input data.
+        """
+        pass
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
