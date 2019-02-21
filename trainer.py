@@ -59,7 +59,7 @@ class Trainer(Mum):
 			print('%s: %s' % x)
 		return self
 	
-	def train(self, textColumn, neuronsLower=5, neuronsUpper=20):
+	def train(self, patternColumn, textColumn, neuronsLower=5, neuronsUpper=20):
 		# Load other to optimize size of the hidden layer on.
 		if self._optStream: FileIO.__init__(self, self._optStream, self._optTextColumn)
 		optimal = 0
@@ -80,8 +80,9 @@ class Trainer(Mum):
 				txt = self.get(patternColumn).strip().lower()
 				if len(txt) > 0:
 					txt = txt.split(' ')
-					for ch in txt: outputPattern += ch
+					for ch in txt: outputPattern += ch[0]
 				if pattern != outputPattern: incorrect += 1
+				print(pattern+':'+outputPattern)
 				#if value == False: incorrect += 1
 				i += 1
 			accuracy = 1
@@ -126,7 +127,7 @@ if __name__ == '__main__':
 		nL, nU = args.n if len(args.n)==2 else [args.n[0], args.n[0]]
 		t = Trainer(False, args.tc[0], args.t, args.ttc)
 		for train in args.training:
-			optimal, accuracy = t.setInput(train, args.tc[0]).parsePatterns(args.pc[0]).train(args.tc[0], int(nL), int(nU))
+			optimal, accuracy = t.setInput(train, args.tc[0]).parsePatterns(args.pc[0]).train(args.pc[0],args.tc[0], int(nL), int(nU))
 			print('Maximum accuracy reached with '+str(optimal)+' neurons: '+str(accuracy)+'% predicted correctly.')
 			t.saveModel()
 		t.save(args.o)

@@ -1,0 +1,6 @@
+Versioning
+0.9.0
+Working version.
+Commands:
+	Trainer: Use for training model.
+	Translator Used for translating sequences.

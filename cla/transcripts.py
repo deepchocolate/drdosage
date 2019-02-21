@@ -121,7 +121,9 @@ class Transcripts:
     def addWordToKey(self,pos,txt, obj):
         if isNumeric(txt): key = '#'
         else: key = txt
-        if pos in self.wordToKey: self.wordToKey[pos][key] = obj
+        if pos in self.wordToKey:
+            if key in self.wordToKey[pos] and self.wordToKey[pos][key] != obj: print('Replacement of object '+self.wordToKey[pos][key]+' with '+obj+'; key '+key+' at position '+str(pos))
+            self.wordToKey[pos][key] = obj
         else: self.wordToKey[pos] = {key:obj}
 
     # key: key of pattern. txt: word to translate. obj: object type. val: what object

@@ -45,10 +45,7 @@ class FileIO(csv.DictReader):
         while next(self) != False: i += 1
         self._nrRecords = i - 1
         self.rewind()
-        #print(self._nrRecords,self.line_num)
-        #print(self.fieldnames,'hej')
         self._output = [False]*self._nrRecords
-        #print(len(self._output))
         self._outputHeader = self.fieldnames
         return self
 
@@ -56,7 +53,6 @@ class FileIO(csv.DictReader):
         """
         Load final output.
         """
-        #self._outputStream = csv.DictWriter(open(self._outFile, 'w'), self._outputHeader)
         self._outputStream = csv.DictWriter(self._outFile, self._outputHeader)
         self._outputStream.writeheader()
         return self
@@ -66,7 +62,6 @@ class FileIO(csv.DictReader):
         else: return True
 
     def seek(self, bytePos=0):
-        #print(self._inputResource)
         self._inputResource.seek(bytePos)
         return self
 
@@ -113,8 +108,6 @@ class FileIO(csv.DictReader):
 
     def writeOutput(self):
         if self._outputStream == False: self.loadOutput()
-        #print(self._outputHeader)
-        #print(self._output)
         self._outputStream.writerows(self._output)
         self._output = []
     
