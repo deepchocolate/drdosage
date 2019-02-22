@@ -1,5 +1,6 @@
-# Remove repeated spaces
 import re
+from num import isNumeric;
+# Remove repeated spaces
 def rmExtraSpace(txt):
 	while txt.find('  ') != -1: txt = txt.replace('  ', ' ')
 	return txt
@@ -24,4 +25,4 @@ def replaceNumbers(txt, replacement='#'):
 	"""
 	Replace numbers in string txt with replacement.
 	"""
-	return REPLACOR.sub(replacement, txt)
+	return ' '.join(['#' if isNumeric(x) else x for x in txt.split(' ')])
