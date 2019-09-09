@@ -1,5 +1,5 @@
 import re
-from num import isNumeric
+from .num import isNumeric
 # Remove repeated spaces
 def rmExtraSpace(txt):
 	while txt.find('  ') != -1: txt = txt.replace('  ', ' ')
@@ -45,9 +45,21 @@ def replaceSubStr(txt, target, replacement, regExpr):
 	else: return txt
 
 RE_COMMASINNUM = re.compile('[0-9],[0-9]')
+RE_ADDSTR = re.compile(' ?[0-9]+(\+[0-9])+ ')
+def addUpNumbers(txt):
+	found = RE_ADDSTR.search(txt)
+	if found != None:
+		st = found.start()
+		ed = found.end()
+		return addUpNumbers(txt[:st]+str(eval(txt[st:ed]))+' '+txt[ed:])
+	else: return txt
+
 def replaceCommasInNumbers(txt, target=',', replacement='.') -> str:
 	return replaceSubStr(txt, target, replacement, RE_COMMASINNUM)
 
+def replaceHalves(txt):
+	return txt.replace('en halv ', '0.5 ')
+	
 def simplify(txt, stripChars=')(.?*=-+"!,\n'):
 	"""
 	Lowercase, remove extra whitespace and "unnecessary" characters at
@@ -55,6 +67,8 @@ def simplify(txt, stripChars=')(.?*=-+"!,\n'):
 	"""
 	return polish(rmExtraSpace(txt.lower()), stripChars)
 
+def lowercaseText(txt):
+	return txt.lower()
 
 def replaceNumbers(txt, replacement='#'):
 	"""
@@ -63,6 +77,6 @@ def replaceNumbers(txt, replacement='#'):
 	return ' '.join(['#' if isNumeric(x) else x for x in txt.split(' ')])
 
 INPUT_FILTERS = {
-	'standard':[rmExtraSpace, separateWords, separateLeadIntFromStr, polish]
-	'extended':[rmExtraSpace, separateWords, separateLeadIntFromStr, polish,replaceCommasInNumbers]
+	'standard':[lowercaseText, rmExtraSpace, separateWords, separateLeadIntFromStr, polish],
+	'extended':[lowercaseText, addUpNumbers,rmExtraSpace,replaceHalves, separateWords, separateLeadIntFromStr, polish, replaceCommasInNumbers]
 }
