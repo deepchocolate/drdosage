@@ -1,2 +1,2 @@
 from .num import *
-from .str import *
+from .strman import *
