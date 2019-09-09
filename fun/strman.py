@@ -1,5 +1,5 @@
 import re
-from .num import isNumeric
+from num import isNumeric
 # Remove repeated spaces
 def rmExtraSpace(txt):
 	while txt.find('  ') != -1: txt = txt.replace('  ', ' ')
@@ -33,6 +33,21 @@ def separateLeadIntFromStr(txt):
 def separateWords(txt):
 	return separateChars(txt, RE_SEPWORDS)
 
+def replaceSubStr(txt, target, replacement, regExpr):
+	"""
+	Replace replacement with target in txt where regular expression regExpr matches.
+	"""
+	found = regExpr.search(txt)
+	if found != None:
+		st = found.start()
+		ed = found.end()
+		return replaceSubStr(txt[:st]+txt[st:ed].replace(target, replacement)+txt[ed:], target, replacement, regExpr)
+	else: return txt
+
+RE_COMMASINNUM = re.compile('[0-9],[0-9]')
+def replaceCommasInNumbers(txt, target=',', replacement='.') -> str:
+	return replaceSubStr(txt, target, replacement, RE_COMMASINNUM)
+
 def simplify(txt, stripChars=')(.?*=-+"!,\n'):
 	"""
 	Lowercase, remove extra whitespace and "unnecessary" characters at
@@ -49,6 +64,5 @@ def replaceNumbers(txt, replacement='#'):
 
 INPUT_FILTERS = {
 	'standard':[rmExtraSpace, separateWords, separateLeadIntFromStr, polish]
+	'extended':[rmExtraSpace, separateWords, separateLeadIntFromStr, polish,replaceCommasInNumbers]
 }
-#samp = '1word word.word 2word word.words'
-#print(separateChars(separateChars(samp, RE_SEPWORDS),RE_SEPLEADINTFROMSTR))
