@@ -8,104 +8,7 @@ import os, sys, argparse, json, datetime, numpy as np, re, csv
 #from fun import rmExtraSpace, simplify, replaceNumbers
 # Classes
 from cla import *
-from fun import rmExtraSpace,simplify,replaceNumbers
-
-class Trainer(Mum):
-	def __init__(self, trainStream=False, textColumn=False, optStream=False, optTextColumn=False):
-		"""
-		trainStream: File with training data.
-		textColumn: Column number or name of text.
-		patternColumn: Column number or name of pattern.
-		modelFile: File to save the model in.
-		optStream: If optimizing using text in trainFile instead.
-		optTextColumn: Column of text when using optFile.
-		"""
-		Mum.__init__(self, trainStream, textColumn)
-		#self.parsePatterns(patternColumn);
-		# If optStream is passed, then load training data separately.
-		self._optTextColumn = optTextColumn
-		self._optStream = optStream
-		#self.train(self._textColumn,5,10)
-		#self.saveModel().save('tests')
-	
-	def setInput(self, trainStream, textColumn):
-		FileIO.__init__(self, trainStream, textColumn)
-		return self
-	
-	def parsePatterns(self, patternColumn, minExamples=6, maxExamples=30):
-		print('Parsing... Including patterns with at least %s examples and limiting to the %s first examples' % (str(minExamples), str(maxExamples)))
-		self.setTrainRunLimit(maxExamples=30, minExamples=6)
-		i = 1
-		n = 1
-		included = 0
-		while next(self) != False:
-			txt = self.get(self._textColumn)
-			txtSimple = simplify(replaceNumbers(txt))
-			pattern = self.get(patternColumn).lower().strip()
-			if pattern not in ['-', '']:
-				try:
-					transcript = self.parseInstruction(txt, pattern)
-					self.addPattern(transcript, txtSimple)
-					included += 1
-				except BaseException:
-					print('Record %s does not parse with pattern %s for input: %s' % (str(i), pattern, txt))
-				i += 1
-			n += 1
-		print('Records read: %s\nRecords parsed: %s\n\tSuccesses: %s\n\tErrors: %s\n\tPercent success: %s' % (str(n), str(i), str(included), str(i-included), str(round(100*included/i,2))))
-		self.updateIO()
-		print('Patterns parsed:')
-		sort = [(k, self.patternCounts[k]) for k in sorted(self.patternCounts, key=self.patternCounts.get, reverse=True)]
-		for x in sort:
-			print('%s: %s' % x)
-		return self
-	
-	def train(self, patternColumn, textColumn, neuronsLower=5, neuronsUpper=20):
-		# Load other to optimize size of the hidden layer on.
-		if self._optStream: FileIO.__init__(self, self._optStream, self._optTextColumn)
-		optimal = 0
-		accuracy = 0
-		maxAccuracy = 0
-		synapse = []
-		for neurons in iter(range(neuronsLower, neuronsUpper+1)):
-			self.setNrHiddenNeurons(neurons).fit(True)
-			print('Predicting on training data...')
-			self.rewind()
-			incorrect = 0
-			i = 0
-			while next(self) != False:
-				if i % 5000 == 0: print('Parsing record:',i + 1)
-				value, pattern, error, prob = self.transcribeCurrent()
-				# Get pattern stripped of whitespace
-				outputPattern = ''
-				txt = self.get(patternColumn).strip().lower()
-				if len(txt) > 0:
-					txt = txt.split(' ')
-					for ch in txt: outputPattern += ch[0]
-				if pattern != outputPattern: incorrect += 1
-				print(pattern+':'+outputPattern)
-				#if value == False: incorrect += 1
-				i += 1
-			accuracy = 1
-			if incorrect <= i: accuracy = 1 - incorrect/i
-			if accuracy > maxAccuracy:
-				optimal = neurons
-				maxAccuracy = accuracy
-				synapse = self.synapse
-			print('% transcribed:',round(100*accuracy,2))
-		self.setNrHiddenNeurons(optimal)
-		self.synapse = synapse
-		return optimal, maxAccuracy
-	
-	def saveModel(self):
-		data = {}
-		data['classifier'] = Classifier.getObjectData(self)
-		data['transcripts'] = Transcripts.getObjectData(self)
-		self.models += [data]
-		return self
-	
-	def save(self, outputStream):
-		outputStream.write(json.dumps(self.models) if len(self.models) > 0 else '')
-		return self
+from fun import *
 
 if __name__ == '__main__':
 	ap = argparse.ArgumentParser(description="""Dr. Dose is a neural network based prediction engine tailored to 
@@ -132,7 +35,88 @@ if __name__ == '__main__':
 			t.saveModel()
 		t.save(args.o)
 	else:
+		dire = '../csv/'
+		a = MarkovishTrainer(open(dire+'dispensations_training_sample.csv'),'doser')
+		b = OperatorMarkovishTrainer(open(dire+'dispensations_training_sample.csv'),'doser')
+		i = 1
+		while next(a):
+			print('Record: ' + str(i))
+			print('\tText: ' + a.get('doser'))
+			print('\tTranscript: ' + a.get('pattern'))
+			a.addIO(a.get('doser'),a.get('pattern'))
+			if a.get('pattern') != '': b.addIO(a.get('doser'),a.get('pattern'))
+			#a.encode(a.get('doser'),a.get('pattern'))
+			i += 1
+		b.fit()
+		b.save(open('myOperatorModel2.model','w'))
+		#quit()
+		a.fit()
+		a.save(open('myModel2.model','w'))
+		quit()
+		a.rewind()
+		N = 0
+		correctN = 0
+		errors = ''
+		while next(a):
+			N += 1
+			cleanInput = ''
+			if a.get('pattern') != '': cleanInput = stripArguments(a.get('pattern').lower().replace(' ;','').replace(' *','').replace('/','s'))
+			cleanOutput = ' '.join(a.predictSequence(a.get('doser')))
+			#print(f.get('doser')+': ' + cleanInput + ' : ' + cleanOutput)
+			if cleanInput.replace(' ','').rstrip('s') == cleanOutput.replace(' ', '').rstrip('s'): correctN += 1
+			else: errors += a.get('doser')+': ' + cleanInput + ' : ' + cleanOutput + "\n"
+		print(correctN,N)
+		quit()
+		# Example of coded use
+		trainingData = '../csv/meds_100_train.csv'
+		textColumn = 'doser'
+		patternColumn = 'pattern'
+		neuronsLowerLimit = 10
+		neuronsUpperLimit = 20
+		t = Transcripts()
+		s = Markovish(6,4, False)
+		#t.addTrancript('one pill per day week 1 2 pills per day weeks two','q1 opill s2 tw t q opill s2 tw t2')
+		#t._funs['q']('two','2')
+		f = FileIO(open(dire+'dispensations_training_sample.csv'))
+		output = 'id,time,dose\n'
+		i = 0;
+		while next(f) != False:
+			print('Record: '+str(i)+' '+f.get('pattern'))
+			t.encode(f.get('doser'), f.get('pattern'))
+			if f.get('pattern') != '':
+				pattern = stripArguments(f.get('pattern').lower().replace(' ;','').replace(' *',''))
+				s.add(f.get('doser'), pattern)
+				for x in t.decode(f.get('doser'),stripArguments(f.get('pattern').lower())):
+					output += f.get('id') + ','+str(x.timePoint()) + ','+str(x.total())+'\n'
+			#print(stripArguments(f.get('pattern')))
+		#print(str(i)+': '+f.get('doser'))
+		i += 1
+		open(dire+'testoutput.csv','w').write(output)
+		fit = s.fit()
+		s.save(open('../seqModel.model','w'))
+		f.rewind()
+		correctN = 0
+		N = 0
+		errors = ''
+		s = Markovish()
+		s.load(open('../seqModel.model'))
+		while next(f) != False:
+			if f.get('pattern') != '':
+				N += 1
+				cleanInput = stripArguments(f.get('pattern').lower().replace(' ;','').replace(' *','').replace('/','s'))
+				cleanOutput = ' '.join(s.predictSequence(f.get('doser')))
+				print(f.get('doser')+': ' + cleanInput + ' : ' + cleanOutput)
+				if cleanInput.replace(' ','').rstrip('s') == cleanOutput.replace(' ', '').rstrip('s'): correctN += 1
+				else: errors += f.get('doser')+': ' + cleanInput + ' : ' + cleanOutput + "\n"
+		print('ERRORS')
+		print(errors)
+		print(correctN, N)
+		wrds = ''
+		# Load object
+		#t = Trainer(open(trainingData), textColumn)
+		# Parse trainingdata and fit the model
+		#optimal,accuracy = t.parsePatterns(patternColumn).train(patternColumn,textColumn,neuronsLowerLimit,neuronsUpperLimit)
+		# Save the model
+		#t.saveModel().save(open('myModel.model','w'))
 		pass
-# Add working example of below
-#t = Trainer(False, 'dosetext').setInput(open('textfile.csv','inputtext').parsePatterns('pattern').saveModel().save(open('myModel.model','w'))
 # Fix bug: leading/trailing blanks in patterns
