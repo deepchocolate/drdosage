@@ -1,8 +1,8 @@
 from .fileio import FileIO
 from .classifier import Classifier
 from .transcripts import Transcripts
-from fun.str import *
-class Mum(FileIO, Classifier, Transcripts):
+from fun.strman import *
+class Mum(FileIO, Transcripts):
 	"""
 	Draft of parent class of all final classes. This class is to handle
 	reading from a file with a column of text that is either being used
@@ -12,13 +12,22 @@ class Mum(FileIO, Classifier, Transcripts):
 		"""
 		There's always a file to read from.
 		"""
-		#self._replacor = re.compile('[0-9]')
-		#self._replaceChar = '#'
 		self.models = []
 		self._textColumn = textColumn
-		if inputStream: FileIO.__init__(self, inputStream, outputStream)
+		FileIO.__init__(self, inputStream, outputStream)
 		Transcripts.__init__(self)
-		Classifier.__init__(self)
+		#Classifier.__init__(self)
+
+	def setInput(self, trainStream, textColumn):
+		"""
+		Set input data and text column.
+		"""
+		self._textColumn = textColumn
+		FileIO.__init__(self, trainStream, textColumn)
+		return self
+	
+	def getCurrentInput(self):
+		return self.get(self._textColumn)
 
 	def transcribeCurrent(self):
 		"""
